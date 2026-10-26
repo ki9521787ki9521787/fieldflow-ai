@@ -1,162 +1,170 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-interface WorkOrder {
+interface Order {
   id: string;
   client: string;
   system: string;
-  status: 'Pending' | 'In Progress' | 'Completed';
-  priority: 'High' | 'Medium' | 'Low';
+  status: string;
+  priority: string;
   technician: string;
 }
 
-const initialOrders: WorkOrder[] = [
-  { id: 'WO-1081', client: 'Apex Commercial Ltd', system: 'Domestic Cold Water - 2" Copper', status: 'In Progress', priority: 'High', technician: 'Alex R.' },
-  { id: 'WO-1082', client: 'Metro Plaza Facility', system: 'Sanitary Waste - Cast Iron 4"', status: 'Pending', priority: 'Medium', technician: 'Unassigned' },
-  { id: 'WO-1083', client: 'St. Jude Hospital', system: 'Medical Gas & Vacuum Lines', status: 'Completed', priority: 'High', technician: 'Dmitry Z.' },
-];
-
 export default function App() {
-  const [view, setView] = useState<'landing' | 'app'>('landing');
-  const [orders, setOrders] = useState<WorkOrder[]>(initialOrders);
-  const [filter, setFilter] = useState<string>('All');
-  const [search, setSearch] = useState<string>('');
-  const [newClient, setNewClient] = useState<string>('');
-  const [newSystem, setNewSystem] = useState<string>('');
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [role, setRole] = useState<string>(localStorage.getItem('role') || 'GUEST');
+  const [view, setView] = useState<'landing' | 'app' | 'pricing'>('landing');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [email, setEmail] = useState('admin@fieldflowai.com');
+  const [password, setPassword] = useState('admin123');
+  const [clientInput, setClientInput] = useState('');
+  const [systemInput, setSystemInput] = useState('');
+  const [error, setError] = useState('');
 
-  const filteredOrders = useMemo(() => {
-    return orders.filter(o => {
-      const matchesFilter = filter === 'All' || o.status === filter;
-      const matchesSearch = o.client.toLowerCase().includes(search.toLowerCase()) || o.system.toLowerCase().includes(search.toLowerCase());
-      return matchesFilter && matchesSearch;
-    });
-  }, [orders, filter, search]);
-
-  const handleCreateOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newClient || !newSystem) return;
-    const newOrd: WorkOrder = {
-      id: `WO-10${orders.length + 1}`,
-      client: newClient,
-      system: newSystem,
-      status: 'Pending',
-      priority: 'Medium',
-      technician: 'Assigned Dispatch'
-    };
-    setOrders([newOrd, ...orders]);
-    setNewClient('');
-    setNewSystem('');
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/orders');
+      const data = await res.json();
+      if (data.data) setOrders(data.data);
+    } catch (err) {
+      console.error('Failed to fetch orders', err);
+    }
   };
 
-  if (view === 'app') {
+  useEffect(() => {
+    if (token) {
+      fetchOrders();
+    }
+  }, [token]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    try {
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+
+      const res = await fetch('http://localhost:8000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('role', data.role);
+        setToken(data.access_token);
+        setRole(data.role);
+        setView('app');
+      } else {
+        setError(data.detail || 'Login failed');
+      }
+    } catch (err) {
+      setError('Connection error with backend server');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setToken(null);
+    setRole('GUEST');
+    setView('landing');
+  };
+
+  const handleCreateOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clientInput || !systemInput) return;
+    try {
+      const res = await fetch('http://localhost:8000/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client: clientInput, system: systemInput, priority: 'High' }),
+      });
+      if (res.ok) {
+        setClientInput('');
+        setSystemInput('');
+        fetchOrders();
+      }
+    } catch (err) {
+      console.error('Failed to create order', err);
+    }
+  };
+
+  if (view === 'app' && token) {
     return (
       <div className="saas-shell">
         <aside className="saas-sidebar">
           <div className="sidebar-brand">FieldFlow AI</div>
-          <div className="sidebar-user">Workspace: Enterprise Tier</div>
+          <div className="sidebar-user">Role: {role}</div>
           <nav className="sidebar-nav">
             <button className="nav-item active">Command Center</button>
-            <button className="nav-item" onClick={() => setView('landing')}>Public Landing</button>
+            <button className="nav-item" onClick={() => setView('pricing')}>Pricing Tiers</button>
+            <button className="nav-item" onClick={() => setView('landing')}>Public Site</button>
           </nav>
           <div className="sidebar-footer">
-            Owner: <strong>ki9521787@gmail.com</strong>
+            Owner &amp; Author:<br /><strong>ki9521787@gmail.com</strong>
           </div>
         </aside>
 
         <main className="saas-main">
           <header className="saas-header">
-            <h1>Operational Dispatch &amp; Takeoff Engine</h1>
+            <h1>Operational Dispatch Dashboard</h1>
             <div className="header-actions">
-              <span className="secure-badge">AES-256 Secured</span>
-              <button className="primary-button" onClick={() => setView('landing')}>Sign Out</button>
+              <span className="secure-badge">Connected to API</span>
+              <button className="primary-button" onClick={handleLogout}>Sign Out</button>
             </div>
           </header>
 
           <section className="metrics-grid">
             <div className="metric-card">
-              <div className="metric-label">Active Orders</div>
+              <div className="metric-label">Total Work Orders</div>
               <div className="metric-value">{orders.length}</div>
             </div>
             <div className="metric-card">
-              <div className="metric-label">In Progress</div>
-              <div className="metric-value">{orders.filter(o => o.status === 'In Progress').length}</div>
-            </div>
-            <div className="metric-card">
               <div className="metric-label">System Status</div>
-              <div className="metric-value text-green">100% Operational</div>
+              <div className="metric-value text-green">Online</div>
             </div>
           </section>
 
           <section className="dashboard-content">
             <div className="panel-box">
-              <div className="panel-top">
-                <h3>Work Orders &amp; Field Execution</h3>
-                <div className="controls-row">
-                  <input
-                    type="text"
-                    placeholder="Search client or system..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    className="search-input"
-                  />
-                  <select value={filter} onChange={e => setFilter(e.target.value)} className="filter-select">
-                    <option value="All">All Statuses</option>
-                    <option value="Pending">Pending</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="table-wrap">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Client</th>
-                      <th>System Specification</th>
-                      <th>Priority</th>
-                      <th>Status</th>
-                      <th>Technician</th>
+              <h3>Active Service Dispatches</h3>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Client</th>
+                    <th>System</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Technician</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((o) => (
+                    <tr key={o.id}>
+                      <td><strong>{o.id}</strong></td>
+                      <td>{o.client}</td>
+                      <td>{o.system}</td>
+                      <td><span className="badge priority">{o.priority}</span></td>
+                      <td><span className="badge status">{o.status}</span></td>
+                      <td>{o.technician}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {filteredOrders.map(o => (
-                      <tr key={o.id}>
-                        <td><strong>{o.id}</strong></td>
-                        <td>{o.client}</td>
-                        <td>{o.system}</td>
-                        <td><span className={`badge priority-${o.priority.toLowerCase()}`}>{o.priority}</span></td>
-                        <td><span className={`badge status-${o.status.toLowerCase().replace(' ', '-')}`}>{o.status}</span></td>
-                        <td>{o.technician}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             <div className="panel-box create-box">
-              <h3>Create New Dispatch Order</h3>
+              <h3>Create Order via API</h3>
               <form onSubmit={handleCreateOrder} className="create-form">
                 <div className="form-group">
                   <label>Client Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Apex Industrial"
-                    value={newClient}
-                    onChange={e => setNewClient(e.target.value)}
-                    required
-                  />
+                  <input type="text" value={clientInput} onChange={(e) => setClientInput(e.target.value)} placeholder="Client Name" required />
                 </div>
                 <div className="form-group">
-                  <label>System / Scope</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Domestic Hot Water - 3''"
-                    value={newSystem}
-                    onChange={e => setNewSystem(e.target.value)}
-                    required
-                  />
+                  <label>System Specification</label>
+                  <input type="text" value={systemInput} onChange={(e) => setSystemInput(e.target.value)} placeholder="System Scope" required />
                 </div>
                 <button type="submit" className="primary-button full-width">Dispatch Order</button>
               </form>
@@ -167,67 +175,75 @@ export default function App() {
     );
   }
 
+  if (view === 'pricing') {
+    return (
+      <div className="page-shell">
+        <header className="topbar">
+          <div className="brand" onClick={() => setView('landing')} style={{ cursor: 'pointer' }}>FieldFlow AI</div>
+          <button className="ghost-button" onClick={() => setView('landing')}>Home</button>
+        </header>
+        <main className="pricing-wrap" style={{ padding: '3rem', textAlign: 'center' }}>
+          <h1>Transparent Pricing</h1>
+          <p>Choose your tier to scale field operations.</p>
+          <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', marginTop: '2rem' }}>
+            <div className="panel-box" style={{ width: '300px' }}>
+              <h3>Starter</h3>
+              <h2>$199 / mo</h2>
+              <button className="primary-button full-width" onClick={() => setView('landing')}>Select</button>
+            </div>
+            <div className="panel-box" style={{ width: '300px', border: '1px solid #5bb0f0' }}>
+              <h3>Enterprise Pro</h3>
+              <h2>$599 / mo</h2>
+              <button className="primary-button full-width" onClick={() => setView('landing')}>Select</button>
+            </div>
+          </div>
+        </main>
+        <footer className="site-footer">Created by <strong>ki9521787@gmail.com</strong></footer>
+      </div>
+    );
+  }
+
   return (
     <div className="page-shell">
       <header className="topbar">
         <div className="brand">FieldFlow AI</div>
         <div className="topbar-actions">
-          <button className="ghost-button" onClick={() => setView('app')}>Sign In</button>
-          <button className="primary-button" onClick={() => setView('app')}>Launch Enterprise</button>
+          <button className="ghost-button" onClick={() => setView('pricing')}>Pricing</button>
+          <button className="primary-button" onClick={() => setView('app')}>Sign In</button>
         </div>
       </header>
 
       <main className="hero-shell">
         <div className="hero-grid">
           <section className="hero-copy-wrap">
-            <div className="brand-pill">FieldFlow Enterprise</div>
-            <div className="hero-badge">ARCHITECTED BY ELITE SYSTEMS ENGINEERING</div>
-            <h1>
-              Autonomous operations &amp;
-              <span className="accent"> AI takeoff for elite <br />mechanical contractors.</span>
-            </h1>
+            <div className="brand-pill">FieldFlow AI Platform</div>
+            <h1>Autonomous operations &amp; <span className="accent">AI takeoff for mechanical teams.</span></h1>
             <p className="subcopy">
-              Engineered with uncompromising precision. FieldFlow AI unifies work orders, telemetry, automated estimation, and real-time field dispatch into an impenetrable, lightning-fast SaaS command center.
+              Manage work orders, track telemetry, and automate dispatch from a secure single source of truth.
             </p>
-            <div className="cta-row">
-              <button type="button" className="primary-button" onClick={() => setView('app')}>
-                Deploy Enterprise Workspace
-              </button>
-              <button type="button" className="secondary-button" onClick={() => setView('app')}>
-                Explore Architecture
-              </button>
-            </div>
-            <div className="fine-print">Zero-trust architecture. SOC2 Type II Ready. Created by ki9521787@gmail.com.</div>
-          </section>
 
-          <aside className="demo-panel">
-            <div className="demo-panel-header">
-              <div className="demo-panel-title">Live Telemetry · Secure Enclave 01</div>
+            <div className="panel-box" style={{ marginTop: '2rem', maxWidth: '400px' }}>
+              <h3>Sign In to Workspace</h3>
+              {error && <div style={{ color: '#e74c3c', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{error}</div>}
+              <form onSubmit={handleLogin} className="create-form">
+                <div className="form-group">
+                  <label>Email</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label>Password</label>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                </div>
+                <button type="submit" className="primary-button full-width">Authorize &amp; Enter</button>
+              </form>
             </div>
-            <div className="list-stack">
-              <div className="stack-item">
-                <div className="stack-topline">ENCRYPTION PROTOCOL</div>
-                <div className="stack-text">AES-256-GCM hardware accelerated key rotation</div>
-              </div>
-              <div className="stack-item">
-                <div className="stack-topline">DISPATCH LATENCY</div>
-                <div className="stack-text">12ms global edge routing via FastAPI backend</div>
-              </div>
-              <div className="stack-item">
-                <div className="stack-topline">ISOLATION TIER</div>
-                <div className="stack-text">Multi-tenant container sandboxing active</div>
-              </div>
-            </div>
-            <div className="summary-box">
-              <div className="summary-label">SYSTEM INTEGRITY</div>
-              <div className="summary-value">100% Verified · Zero Vulnerabilities</div>
-            </div>
-          </aside>
+            <div className="fine-print">Default admin: admin@fieldflowai.com / admin123. Owner: ki9521787@gmail.com</div>
+          </section>
         </div>
       </main>
 
       <footer className="site-footer">
-        FieldFlow AI Enterprise Edition · Designed and Owned by <strong>ki9521787@gmail.com</strong>
+        FieldFlow AI · Built and Owned by <strong>ki9521787@gmail.com</strong>
       </footer>
     </div>
   );
