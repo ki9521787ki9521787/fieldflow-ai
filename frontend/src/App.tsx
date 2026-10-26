@@ -20,6 +20,22 @@ type WorkOrder = {
   created_at: string;
 };
 
+type Client = {
+  id: number;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+};
+
+type Site = {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  timezone: string;
+};
+
 const emptyForm = {
   order_number: '',
   client_name: '',
@@ -37,15 +53,32 @@ const emptyForm = {
 
 function App() {
   const [orders, setOrders] = useState<WorkOrder[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('admin123');
   const [form, setForm] = useState(emptyForm);
-  const [metrics, setMetrics] = useState({ total: 0, active: 0, urgent: 0, completed: 0 });
+  const [metrics, setMetrics] = useState({ total: 0, active: 0, urgent: 0, completed: 0, clients: 0, sites: 0 });
 
   const loadOrders = async () => {
     const res = await fetch('/api/orders');
     const data = await res.json();
     setOrders(data);
+  };
+
+  const loadClients = async () => {
+    const res = await fetch('/api/clients');
+    const data = await res.json();
+    setClients(data);
+  };
+
+  const loadSites = async () => {
+    const res = await fetch('/api/sites');
+    const data = await res.json();
+    setSites(data);
   };
 
   const loadMetrics = async () => {
@@ -55,15 +88,30 @@ function App() {
   };
 
   useEffect(() => {
-    loadOrders();
-    loadMetrics();
-  }, []);
+    if (isLoggedIn) {
+      loadOrders();
+      loadMetrics();
+      loadClients();
+      loadSites();
+    }
+  }, [isLoggedIn]);
+
+  const handleLogin = async (event: FormEvent) => {
+    event.preventDefault();
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (res.ok) {
+      setIsLoggedIn(true);
+    }
+  };
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
-      const matchesSearch = `${order.order_number} ${order.client_name} ${order.site_name}`
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const matchesSearch = `${order.order_number} ${order.client_name} ${order.site_name}`.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -95,6 +143,36 @@ function App() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  if (!isLoggedIn) {
+    return (
+      <div className="login-shell">
+        <div className="login-card">
+          <div className="brand-wrap">
+            <div className="brand-mark">F</div>
+            <div>
+              <div className="eyebrow">Field service SaaS</div>
+              <h1>FieldFlow AI</h1>
+            </div>
+          </div>
+
+          <form onSubmit={handleLogin} className="login-form">
+            <label>
+              Username
+              <input value={username} onChange={(e) => setUsername(e.target.value)} />
+            </label>
+            <label>
+              Password
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            </label>
+            <button type="submit" className="primary-button full-width">Sign in</button>
+          </form>
+
+          <div className="login-footer">Built by ki9521787@gmail.com</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -116,18 +194,9 @@ function App() {
 
         <div className="sidebar-panel">
           <div className="panel-title">Operational pulse</div>
-          <div className="mini-metric">
-            <span>Open work</span>
-            <strong>{metrics.active}</strong>
-          </div>
-          <div className="mini-metric">
-            <span>Urgent</span>
-            <strong>{metrics.urgent}</strong>
-          </div>
-          <div className="mini-metric">
-            <span>Completed</span>
-            <strong>{metrics.completed}</strong>
-          </div>
+          <div className="mini-metric"><span>Open work</span><strong>{metrics.active}</strong></div>
+          <div className="mini-metric"><span>Urgent</span><strong>{metrics.urgent}</strong></div>
+          <div className="mini-metric"><span>Completed</span><strong>{metrics.completed}</strong></div>
         </div>
       </aside>
 
@@ -141,21 +210,30 @@ function App() {
         </header>
 
         <section className="metrics-grid">
-          <div className="metric-card accent">
-            <span>Total orders</span>
-            <strong>{metrics.total}</strong>
+          <div className="metric-card accent"><span>Total orders</span><strong>{metrics.total}</strong></div>
+          <div className="metric-card"><span>Open jobs</span><strong>{metrics.active}</strong></div>
+          <div className="metric-card"><span>Urgent</span><strong>{metrics.urgent}</strong></div>
+          <div className="metric-card"><span>Clients</span><strong>{metrics.clients}</strong></div>
+          <div className="metric-card"><span>Sites</span><strong>{metrics.sites}</strong></div>
+          <div className="metric-card"><span>Completed</span><strong>{metrics.completed}</strong></div>
+        </section>
+
+        <section className="clients-grid">
+          <div className="stats-box">
+            <h3>Clients</h3>
+            <ul>
+              {clients.slice(0, 5).map((client) => (
+                <li key={client.id}>{client.company || client.name}</li>
+              ))}
+            </ul>
           </div>
-          <div className="metric-card">
-            <span>Open jobs</span>
-            <strong>{metrics.active}</strong>
-          </div>
-          <div className="metric-card">
-            <span>Urgent</span>
-            <strong>{metrics.urgent}</strong>
-          </div>
-          <div className="metric-card">
-            <span>Completed</span>
-            <strong>{metrics.completed}</strong>
+          <div className="stats-box">
+            <h3>Sites</h3>
+            <ul>
+              {sites.slice(0, 5).map((site) => (
+                <li key={site.id}>{site.name}</li>
+              ))}
+            </ul>
           </div>
         </section>
 
@@ -164,11 +242,7 @@ function App() {
             <div className="panel-header">
               <h3>Orders</h3>
               <div className="toolbar">
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search order, client, site"
-                />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search order, client, site" />
                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                   <option value="all">All statuses</option>
                   <option value="new">New</option>
@@ -190,20 +264,14 @@ function App() {
                     </div>
                     <span className={`pill ${order.status}`}>{order.status}</span>
                   </div>
-
                   <div className="meta-grid">
                     <span>Client: {order.client_name}</span>
                     <span>Assigned: {order.assigned_to}</span>
                     <span>Priority: {order.priority}</span>
                     <span>Date: {order.scheduled_at || 'TBD'}</span>
                   </div>
-
                   <p>{order.description || 'No description provided.'}</p>
-
-                  <div className="progress-bar-wrap">
-                    <div className="progress-bar" style={{ width: `${order.completion_percent}%` }} />
-                  </div>
-
+                  <div className="progress-bar-wrap"><div className="progress-bar" style={{ width: `${order.completion_percent}%` }} /></div>
                   <div className="inline-actions">
                     <button className="ghost-button">View</button>
                     <button className="ghost-button danger" onClick={() => handleDelete(order.id)}>Delete</button>
@@ -214,31 +282,24 @@ function App() {
           </div>
 
           <div className="form-panel">
-            <div className="panel-header">
-              <h3>Create work order</h3>
-            </div>
-
+            <div className="panel-header"><h3>Create work order</h3></div>
             <form onSubmit={handleSubmit} className="order-form">
               <label>
                 Order number
                 <input value={form.order_number} onChange={(e) => updateField('order_number', e.target.value)} required />
               </label>
-
               <label>
                 Client name
                 <input value={form.client_name} onChange={(e) => updateField('client_name', e.target.value)} required />
               </label>
-
               <label>
                 Site name
                 <input value={form.site_name} onChange={(e) => updateField('site_name', e.target.value)} required />
               </label>
-
               <label>
                 Address
                 <input value={form.address} onChange={(e) => updateField('address', e.target.value)} required />
               </label>
-
               <div className="two-col">
                 <label>
                   Status
@@ -250,7 +311,6 @@ function App() {
                     <option value="on_hold">On hold</option>
                   </select>
                 </label>
-
                 <label>
                   Priority
                   <select value={form.priority} onChange={(e) => updateField('priority', e.target.value)}>
@@ -260,41 +320,34 @@ function App() {
                   </select>
                 </label>
               </div>
-
               <div className="two-col">
                 <label>
                   Assigned to
                   <input value={form.assigned_to} onChange={(e) => updateField('assigned_to', e.target.value)} />
                 </label>
-
                 <label>
                   Scheduled date
                   <input type="date" value={form.scheduled_at} onChange={(e) => updateField('scheduled_at', e.target.value)} />
                 </label>
               </div>
-
               <label>
                 Description
                 <textarea value={form.description} onChange={(e) => updateField('description', e.target.value)} rows={4} />
               </label>
-
               <div className="two-col">
                 <label>
                   Tasks count
                   <input type="number" min={0} value={form.task_count} onChange={(e) => updateField('task_count', Number(e.target.value))} />
                 </label>
-
                 <label>
                   Completion %
                   <input type="number" min={0} max={100} value={form.completion_percent} onChange={(e) => updateField('completion_percent', Number(e.target.value))} />
                 </label>
               </div>
-
               <label>
                 Notes
                 <textarea value={form.notes} onChange={(e) => updateField('notes', e.target.value)} rows={3} />
               </label>
-
               <button type="submit" className="primary-button full-width">Save order</button>
             </form>
           </div>
