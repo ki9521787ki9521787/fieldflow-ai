@@ -1,101 +1,90 @@
 # FieldFlow AI
 
-AI-powered service work order SaaS platform for field service companies.
+AI-powered service operations platform for field service companies, plumbing and HVAC teams, maintenance businesses, and commercial service organizations.
 
-Built and owned by ki9521787@gmail.com.
+Built and owned by: ki9521787@gmail.com
 
-FieldFlow AI is a premium service operations platform built for field service companies, maintenance teams, repair businesses, contractors, and service organizations that need real operational control across jobs, teams, sites, and customer communication.
+FieldFlow AI helps service businesses manage work orders, dispatch technicians, coordinate jobs, track progress, and report operational performance from a single system.
 
-This repository contains a serious MVP foundation for a real SaaS business.
+## Why it matters
 
-## Why this product matters
+Most service businesses lose money not because they lack jobs, but because operations are chaotic:
+- work orders arrive from phone, text, email, and WhatsApp
+- assignments are manual and inconsistent
+- dispatch decisions are slow and poorly tracked
+- field teams do not know what is complete
+- customers do not know the status of work
+- reporting lives in spreadsheets and scattered messages
+- productivity is invisible and hard to measure
 
-Most service companies lose money not because they lack clients, but because operations are chaotic:
-- work orders arrive by phone, text, email, and WhatsApp,
-- tasks are assigned manually and inconsistently,
-- dispatch decisions are slow and poorly tracked,
-- field teams do not know what is complete,
-- customers do not know the status of the work,
-- reporting lives in scattered spreadsheets and messages,
-- productivity is hidden and cannot be measured.
-
-FieldFlow AI centralizes workflows into one operational command center.
+FieldFlow AI centralizes those workflows into one operational command center.
 
 ## Product vision
 
-This is not another simple task board.
-
-FieldFlow AI is an operational system for service businesses with:
-- work order lifecycle management,
-- client and site tracking,
-- technician dispatch and scheduling,
-- progress visibility,
-- file and photo attachments,
-- SLA monitoring,
-- business analytics,
-- white-label SaaS potential,
-- AI dispatching for future product expansion.
+FieldFlow AI is a SaaS operating system for service teams with:
+- work order lifecycle management
+- client and site tracking
+- technician dispatch and scheduling
+- completion visibility
+- photo and file attachments
+- SLA monitoring
+- business analytics
+- white-label and multi-client potential
+- AI-assisted takeoff and estimation for trades businesses
 
 ## Core features
 
-- dashboard with KPI cards,
-- order creation and editing,
-- client and site management,
-- technician assignment,
-- search and filtering,
-- scheduled jobs and priorities,
-- completion tracking,
-- file and photo attachment support,
-- export-ready reporting,
-- role-ready architecture for future scaling,
-- future AI-powered dispatch assistant.
+- dashboard with KPI cards
+- work order creation and editing
+- client and site management
+- technician assignment
+- search and filtering
+- scheduled jobs and priorities
+- completion tracking
+- export-ready reporting
+- role-aware architecture for scalable operations
+- AI-powered future dispatch and estimation workflows
 
 ## Security-first product posture
 
-This product is designed to evolve toward professional SaaS-grade security:
-- role-based access control,
-- secure secret handling,
-- CORS restrictions,
-- secure password hashing,
-- JWT-ready authentication flow,
-- audit logging,
-- tenant isolation,
-- structured data validation,
-- safe file handling and uploads.
+This project is designed to evolve toward professional SaaS-grade security:
+- role-based access control
+- secret handling via environment configuration
+- CORS restrictions
+- hashing for user credentials
+- JWT-ready authentication architecture
+- audit logging foundations
+- structured validation
+- controlled file and upload handling
 
 ## Product positioning
 
 FieldFlow AI is built for:
-- service companies,
-- field teams,
-- maintenance and repair businesses,
-- HVAC and plumbing firms,
-- cleaning and janitorial organizations,
-- property service operations,
-- technical support teams,
-- facilities and maintenance companies.
+- plumbing and HVAC businesses
+- field service companies
+- commercial maintenance teams
+- contractors and service organizations
+- repair and facilities operations
+- technical support teams
 
 ## Tech stack
 
 - Backend: Python, FastAPI, SQLAlchemy
 - Frontend: React, TypeScript, Vite
-- Styling: custom SaaS dashboard styling
-- Database: SQLite for local MVP, PostgreSQL-ready for production
+- Database: SQLite for MVP, PostgreSQL-ready for production
 - Deployment: Docker / Docker Compose
-- Security model: secure secrets, CORS, password hashing, auth-ready architecture
 
 ## Commercial model
 
-This is designed as a real SaaS product with strong recurring revenue:
-- monthly SaaS subscriptions,
-- team and enterprise tiers,
-- onboarding and setup fees,
-- custom integrations,
-- white-label deployments,
-- API access,
-- premium support plans.
+This is designed as a serious SaaS product with recurring revenue potential:
+- SaaS subscriptions
+- team and enterprise plans
+- onboarding and setup services
+- white-label deployments
+- custom integrations and API access
+- premium support
 
-## Fast start
+## Start locally
 
 ### Backend
 
@@ -144,42 +133,14 @@ Password: admin123
 - SECURITY.md
 - LICENSE
 
-## Roadmap
+## Ownership and attribution
 
-### MVP
-- work orders
-- clients and sites
-- dashboards and metrics
-- quick creation flows
-- role-ready auth foundation
-- export-friendly reporting
+Built and designed by: ki9521787@gmail.com
 
-### Next phase
-- AI dispatch assistant
-- client portal
-- SLA tracking and alerts
-- calendar sync
-- map-based routing
-- file storage and attachments
-- white-label deployments
-
-### Enterprise phase
-- RBAC and access scoping
-- tenant isolation
-- audit trails
-- secure file handling
-- custom integrations
-- API platform
-- billing and subscriptions
+This repository is intended as a serious SaaS foundation for service operations and can be adapted for commercial use.
 
 ## Contact
 
 Email: ki9521787@gmail.com
 Website: https://fieldflowai.com
 GitHub: https://github.com/ki9521787ki9521787/fieldflow-ai
-
-## Copyright and attribution
-
-Built and designed by ki9521787@gmail.com.
-
-This project is intended to be a serious SaaS starter for service businesses and can be adapted into a commercial product.
